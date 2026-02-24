@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webインフラ・保守担当者 採用テスト</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .timer-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .timer {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+            font-family: 'Courier New', monospace;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin: 0 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .question-count {
+            color: #666;
+            font-size: 14px;
+            min-width: 80px;
+        }
+
+        .start-screen {
+            text-align: center;
+        }
+
+        .start-screen h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .start-screen p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .start-screen .info-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            text-align: left;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .question-section {
+            display: none;
+        }
+
+        .question-section.active {
+            display: block;
+        }
+
+        .question-title {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 25px;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .option input[type="radio"] {
+            margin-right: 12px;
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+        }
+
+        .option label {
+            cursor: pointer;
+            flex: 1;
+            color: #333;
+        }
+
+        .option.correct {
+            border-color: #4caf50;
+            background: #f1f8f4;
+        }
+
+        .option.incorrect {
+            border-color: #f44336;
+            background: #fef5f5;
+        }
+
+        .option.selected.incorrect {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+
+        .feedback {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+        }
+
+        .feedback.correct {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            color: #2e7d32;
+        }
+
+        .feedback.incorrect {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            color: #c62828;
+        }
+
+        .feedback-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .feedback-text {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .result-section {
+            display: none;
+            text-align: center;
+        }
+
+        .result-section.active {
+            display: block;
+        }
+
+        .score-circle {
+            width: 200px;
+            height: 200px;
+            margin: 30px auto;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .score-value {
+            font-size: 60px;
+            font-weight: bold;
+        }
+
+        .score-label {
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .result-message {
+            font-size: 20px;
+            color: #333;
+            margin: 20px 0;
+            font-weight: 600;
+        }
+
+        .result-detail {
+            color: #666;
+            font-size: 14px;
+            margin: 15px 0;
+            line-height: 1.6;
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .timer {
+                font-size: 24px;
+            }
+
+            .score-circle {
+                width: 150px;
+                height: 150px;
+            }
+
+            .score-value {
+                font-size: 45px;
+            }
+
+            .timer-section {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .progress-bar {
+                width: 100%;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- スタート画面 -->
+        <div class="start-screen" id="startScreen">
+            <div class="header">
+                <h1>🌐 Webインフラ・保守担当者</h1>
+                <p>採用テスト</p>
+            </div>
+            <h2>テスト概要</h2>
+            <p>このテストは、Webインフラの実務経験を測定するためのものです。</p>
+            <div class="info-box">
+                <strong>テスト詳細：</strong><br>
+                • 問題数：10問（4択形式）<br>
+                • 制限時間：15分<br>
+                • 採点：即座に採点され、各問の解説が表示されます<br>
+                • 難易度：実務レベル（ひっかけ問題を含む）
+            </div>
+            <p>ボタンをクリックしてテストを開始してください。</p>
+            <button class="start-btn" onclick="startTest()">テスト開始</button>
+        </div>
+
+        <!-- テスト画面 -->
+        <div class="question-section" id="questionSection">
+            <div class="timer-section">
+                <div class="timer" id="timer">15:00</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="question-count"><span id="currentQuestion">1</span>/10</div>
+            </div>
+
+            <div class="question-title" id="questionTitle"></div>
+
+            <div class="options" id="optionsContainer"></div>
+
+            <div class="feedback" id="feedback"></div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" id="submitBtn" onclick="submitAnswer()">回答する</button>
+            </div>
+        </div>
+
+        <!-- 結果画面 -->
+        <div class="result-section" id="resultSection">
+            <div class="header">
+                <h1>テスト完了</h1>
+            </div>
+            <div class="score-circle">
+                <div class="score-value" id="finalScore">0</div>
+                <div class="score-label">/ 10</div>
+            </div>
+            <div class="result-message" id="resultMessage"></div>
+            <div class="result-detail" id="resultDetail"></div>
+            <button class="restart-btn" onclick="restartTest()">テストをもう一度</button>
+        </div>
+    </div>
+
+    <script>
+        // テスト問題データ
+        const questions = [
+            {
+                question: "サーバー移管時に、DNSのTTL（Time To Live）を事前に短縮する理由として、最も適切なのはどれですか？",
+                options: [
+                    "移管時の名前解決を高速化するため",
+                    "古いサーバーのキャッシュを早期に削除し、スムーズに新サーバーに切り替えるため",
+                    "ネットワーク帯域幅を節約するため",
+                    "DNSクエリの数を減らすため"
+                ],
+                correct: 1,
+                explanation: "TTLを短縮することで、キャッシュ有効期限を短くし、移管時に素早く新IPアドレスに切り替えられます。移管完了後、TTLを元に戻すことが重要です。"
+            },
+            {
+                question: "MXレコード設定時に、複数のメールサーバーを指定する場合、優先度（プリファレンス値）の設定について、正しいのはどれですか？",
+                options: [
+                    "数値が大きいほど優先度が高い",
+                    "数値が小さいほど優先度が高い（ひっかけ問題）",
+                    "優先度は重要ではなく、ラウンドロビンで自動配分される",
+                    "MXレコードは1つだけ設定できる"
+                ],
+                correct: 1,
+                explanation: "MXレコードの優先度は、数値が小さいほど高優先度です。メールサーバー1（優先度10）が優先され、ダウン時にメールサーバー2（優先度20）が使用されます。"
+            },
+            {
+                question: "SPFレコード設定で『v=spf1 ip4:192.0.2.1 ~all』と指定した場合、指定されたIP以外からのメール送信はどうなりますか？",
+                options: [
+                    "完全にブロックされる",
+                    "ソフトフェイル（迷惑メール判定される可能性あり）",
+                    "完全に許可される",
+                    "SPFチェックがスキップされる"
+                ],
+                correct: 1,
+                explanation: "『~all』はソフトフェイル（Softfail）を示します。完全ブロックは『-all』です。ソフトフェイルは迷惑メール判定される可能性がありますが、ブロックはされません。"
+            },
+            {
+                question: "DKIMの秘密鍵を誤って公開してしまった場合、最優先で行うべき対応はどれですか？",
+                options: [
+                    "公開鍵をDNSから削除する",
+                    "秘密鍵を新たに生成し、公開鍵をDNSに再設定する",
+                    "メールサーバーのログを確認する",
+                    "特に対応は不要（秘密鍵なので問題ない）"
+                ],
+                correct: 1,
+                explanation: "秘密鍵が漏洩した場合、攻撃者がなりすまし可能になります。即座に新しい鍵ペアを生成し、公開鍵をDNSに更新する必要があります。"
+            },
+            {
+                question: "WordPressで『500 Internal Server Error』が出た場合、最初に確認すべきは？",
+                options: [
+                    "WordPressをアップデートする",
+                    "サーバーのエラーログ（wp-content/debug.log または Webサーバーのエラーログ）",
+                    "プラグインをすべて無効化する",
+                    "データベースをバックアップする"
+                ],
+                correct: 1,
+                explanation: "500エラーの原因特定にはエラーログが最重要です。wp-config.phpでデバッグを有効化（define('WP_DEBUG', true)）し、ログを確認します。"
+            },
+            {
+                question: "WordPressのメディアライブラリで画像がアップロードできない場合、以下のどれが最初の確認項目ですか？",
+                options: [
+                    "wp-content/uploads のディレクトリパーミッションが755以上か確認",
+                    "WordPressのバージョンを最新にアップデート",
+                    "プラグインをすべて無効化",
+                    "データベースの最適化"
+                ],
+                correct: 0,
+                explanation: "画像アップロード失敗の主な原因は、uploadsディレクトリのパーミッション不足です。755以上に設定してください。PHPのメモリ制限も併せて確認します。"
+            },
+            {
+                question: "サーバー移管後、Webサイトの表示は正常だが、一部のユーザーに古いIPアドレスが返される場合、その原因として最も可能性が高いのは？",
+                options: [
+                    "ファイアウォールの設定が間違っている",
+                    "DNSキャッシュがまだ全世界的に更新されていない（ひっかけ問題）",
+                    "新しいサーバーのスペックが低い",
+                    "CGIスクリプトが古いサーバーを参照している"
+                ],
+                correct: 1,
+                explanation: "DNS変更は、キャッシュサーバーや各ISPのDNS設定により、反映に24～48時間かかることがあります。これは正常な挙動です。"
+            },
+            {
+                question: "DMARC（Domain-based Message Authentication, Reporting and Conformance）ポリシーで『p=reject』を設定したが、社内のメールが外部に送信できなくなった。最初の確認項目は？",
+                options: [
+                    "メールサーバーをリスタートする",
+                    "SPFとDKIMの設定が正しく、すべて通過しているか確認",
+                    "DMARCレコードをDNSから削除する",
+                    "ITベンダーに連絡する"
+                ],
+                correct: 1,
+                explanation: "『p=reject』ポリシーでメール送信失敗が起きる場合、SPFまたはDKIM認証が失敗している可能性が高い。両者が完全に通過する必要があります。"
+            },
+            {
+                question: "WordPressのwp-config.phpで『define('DISALLOW_FILE_EDIT', true);』を設定する主な理由は？",
+                options: [
+                    "ファイルの読み込み速度を向上させるため",
+                    "セキュリティ向上：管理画面からのテーマ・プラグイン編集を禁止し、FTP改ざんリスク軽減",
+                    "ディスク容量を節約するため",
+                    "データベースのクエリを減らすため"
+                ],
+                correct: 1,
+                explanation: "この設定により、WordPress管理画面のテーマエディタとプラグインエディタが無効化されます。セキュリティ向上と、不意の編集ミスによる破損を防止できます。"
+            },
+            {
+                question: "HTTPSリダイレクト設定後、ブラウザキャッシュが原因でHTTPでアクセス可能なままの場合、ユーザー側で最も効果的な対応は？",
+                options: [
+                    "ブラウザを再インストールする",
+                    "ブラウザキャッシュをクリアし、Cookieも削除する（ひっかけ問題）",
+                    "サーバー側でリダイレクト設定を再確認させる",
+                    "異なるブラウザを使用する"
+                ],
+                correct: 1,
+                explanation: "ブラウザキャッシュが古いHTTP設定を保有している場合、ユーザーがキャッシュをクリアして対応できます。サーバー側も Strict-Transport-Security（HSTS）ヘッダで対応可能です。"
+            }
+        ];
+
+        // グローバル変数
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timeRemaining = 15 * 60; // 15分（秒）
+        let timerInterval = null;
+        let answers = [];
+        let testStarted = false;
+
+        // テスト開始
+        function startTest() {
+            testStarted = true;
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('questionSection').classList.add('active');
+            loadQuestion();
+            startTimer();
+        }
+
+        // タイマー開始
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                updateTimerDisplay();
+
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    submitTest();
+                }
+            }, 1000);
+        }
+
+        // タイマー表示更新
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            document.getElementById('timer').textContent =
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            // プログレスバー更新
+            const totalTime = 15 * 60;
+            const progress = (timeRemaining / totalTime) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        // 問題読み込み
+        function loadQuestion() {
+            const question = questions[currentQuestionIndex];
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+            document.getElementById('questionTitle').textContent = question.question;
+
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+
+            question.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option';
+                optionDiv.innerHTML = `
+                    <input type="radio" id="option${index}" name="answer" value="${index}">
+                    <label for="option${index}">${option}</label>
+                `;
+                optionDiv.addEventListener('click', () => {
+                    document.getElementById(`option${index}`).checked = true;
+                });
+                optionsContainer.appendChild(optionDiv);
+            });
+
+            // フィードバック非表示
+            document.getElementById('feedback').classList.remove('show');
+            document.getElementById('submitBtn').textContent = '回答する';
+            document.getElementById('submitBtn').disabled = false;
+        }
+
+        // 回答送信
+        function submitAnswer() {
+            const selectedOption = document.querySelector('input[name="answer"]:checked');
+            if (!selectedOption) {
+                alert('回答を選択してください');
+                return;
+            }
+
+            const selectedIndex = parseInt(selectedOption.value);
+            const question = questions[currentQuestionIndex];
+            const isCorrect = selectedIndex === question.correct;
+
+            // 回答を保存
+            answers.push({
+                questionIndex: currentQuestionIndex,
+                selected: selectedIndex,
+                correct: question.correct,
+                isCorrect: isCorrect
+            });
+
+            if (isCorrect) {
+                score++;
+            }
+
+            // フィードバック表示
+            showFeedback(isCorrect, question);
+
+            // 次の問題へ
+            document.getElementById('submitBtn').textContent =
+                currentQuestionIndex === 9 ? 'テスト完了' : '次の問題へ';
+            document.getElementById('submitBtn').disabled = false;
+            document.getElementById('submitBtn').onclick = () => {
+                if (currentQuestionIndex === 9) {
+                    submitTest();
+                } else {
+                    currentQuestionIndex++;
+                    loadQuestion();
+                }
+            };
+        }
+
+        // フィードバック表示
+        function showFeedback(isCorrect, question) {
+            const feedbackDiv = document.getElementById('feedback');
+            feedbackDiv.className = `feedback show ${isCorrect ? 'correct' : 'incorrect'}`;
+            feedbackDiv.innerHTML = `
+                <div class="feedback-title">${isCorrect ? '✓ 正解' : '✗ 不正解'}</div>
+                <div class="feedback-text"><strong>解説：</strong> ${question.explanation}</div>
+            `;
+
+            // オプションのハイライト
+            const options = document.querySelectorAll('.option');
+            options.forEach((opt, idx) => {
+                if (idx === question.correct) {
+                    opt.classList.add('correct');
+                } else if (idx === parseInt(document.querySelector('input[name="answer"]:checked').value) && !isCorrect) {
+                    opt.classList.add('incorrect');
+                }
+            });
+
+            document.getElementById('submitBtn').disabled = true;
+        }
+
+        // テスト完了
+        function submitTest() {
+            clearInterval(timerInterval);
+            document.getElementById('questionSection').classList.remove('active');
+            document.getElementById('resultSection').classList.add('active');
+
+            document.getElementById('finalScore').textContent = score;
+
+            const percentage = Math.round((score / 10) * 100);
+            let resultMessage = '';
+            let resultDetail = '';
+
+            if (percentage === 100) {
+                resultMessage = '満点です！🎉';
+                resultDetail = 'Webインフラの実務知識が非常に豊富です。素晴らしい成績です。';
+            } else if (percentage >= 80) {
+                resultMessage = '優秀です！';
+                resultDetail = 'Webインフラの実務経験が充分にあります。';
+            } else if (percentage >= 60) {
+                resultMessage = '良好です。';
+                resultDetail = 'Webインフラの基本知識があります。';
+            } else if (percentage >= 40) {
+                resultMessage = '今後の学習が必要です。';
+                resultDetail = 'Webインフラの実務経験を積むことをお勧めします。';
+            } else {
+                resultMessage = '学習を強化してください。';
+                resultDetail = 'DNS、メール認証、WordPressのトラブルシューティング知識の習得をお勧めします。';
+            }
+
+            document.getElementById('resultMessage').textContent = resultMessage;
+            document.getElementById('resultDetail').textContent = resultDetail;
+        }
+
+        // テスト再スタート
+        function restartTest() {
+            currentQuestionIndex = 0;
+            score = 0;
+            timeRemaining = 15 * 60;
+            answers = [];
+            testStarted = false;
+
+            document.getElementById('startScreen').style.display = 'block';
+            document.getElementById('questionSection').classList.remove('active');
+            document.getElementById('resultSection').classList.remove('active');
+
+            clearInterval(timerInterval);
+        }
+    </script>
+</body>
+</html>
