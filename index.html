@@ -57,13 +57,29 @@
             padding: 20px;
             background: #f8f9fa;
             border-radius: 8px;
+            gap: 20px;
+        }
+
+        .timer-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .timer-label {
+            color: #666;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .timer {
-            font-size: 32px;
+            font-size: 36px;
             font-weight: bold;
             color: #667eea;
             font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
         }
 
         .progress-bar {
@@ -71,8 +87,8 @@
             height: 8px;
             background: #e0e0e0;
             border-radius: 4px;
-            margin: 0 20px;
             overflow: hidden;
+            min-width: 100px;
         }
 
         .progress-fill {
@@ -85,7 +101,9 @@
         .question-count {
             color: #666;
             font-size: 14px;
-            min-width: 80px;
+            min-width: 60px;
+            text-align: right;
+            font-weight: 600;
         }
 
         .start-screen {
@@ -264,15 +282,6 @@
             transform: none;
         }
 
-        .btn-secondary {
-            background: #f0f0f0;
-            color: #333;
-        }
-
-        .btn-secondary:hover {
-            background: #e0e0e0;
-        }
-
         .result-section {
             display: none;
             text-align: center;
@@ -347,7 +356,7 @@
             }
 
             .timer {
-                font-size: 24px;
+                font-size: 28px;
             }
 
             .score-circle {
@@ -361,12 +370,16 @@
 
             .timer-section {
                 flex-direction: column;
-                gap: 15px;
+                align-items: stretch;
             }
 
             .progress-bar {
                 width: 100%;
-                margin: 10px 0;
+                min-width: unset;
+            }
+
+            .question-count {
+                text-align: left;
             }
         }
     </style>
@@ -395,7 +408,10 @@
         <!-- テスト画面 -->
         <div class="question-section" id="questionSection">
             <div class="timer-section">
-                <div class="timer" id="timer">15:00</div>
+                <div class="timer-box">
+                    <div class="timer-label">残り時間</div>
+                    <div class="timer" id="timer">15:00</div>
+                </div>
                 <div class="progress-bar">
                     <div class="progress-fill" id="progressFill"></div>
                 </div>
@@ -546,22 +562,29 @@
         // グローバル変数
         let currentQuestionIndex = 0;
         let score = 0;
-        let timeRemaining = 15 * 60; // 15分（秒）
+        let timeRemaining = 900; // 15分（900秒）
         let timerInterval = null;
-        let answers = [];
         let testStarted = false;
+        const TOTAL_TIME = 900; // 900秒
 
         // テスト開始
         function startTest() {
             testStarted = true;
+            currentQuestionIndex = 0;
+            score = 0;
+            timeRemaining = TOTAL_TIME;
+
             document.getElementById('startScreen').style.display = 'none';
             document.getElementById('questionSection').classList.add('active');
+
             loadQuestion();
             startTimer();
         }
 
         // タイマー開始
         function startTimer() {
+            updateTimerDisplay();
+
             timerInterval = setInterval(() => {
                 timeRemaining--;
                 updateTimerDisplay();
@@ -573,25 +596,30 @@
             }, 1000);
         }
 
-        // タイマー表示更新
+        // タイマー表示更新（分:秒 形式で統一）
         function updateTimerDisplay() {
             const minutes = Math.floor(timeRemaining / 60);
             const seconds = timeRemaining % 60;
-            document.getElementById('timer').textContent =
-                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            // 分:秒 形式（ゼロ埋めあり）
+            const displayTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            document.getElementById('timer').textContent = displayTime;
 
             // プログレスバー更新
-            const totalTime = 15 * 60;
-            const progress = (timeRemaining / totalTime) * 100;
+            const progress = (timeRemaining / TOTAL_TIME) * 100;
             document.getElementById('progressFill').style.width = progress + '%';
         }
 
         // 問題読み込み
         function loadQuestion() {
             const question = questions[currentQuestionIndex];
-            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+
+            // 進捗表示を確実に更新
+            const questionNumber = currentQuestionIndex + 1;
+            document.getElementById('currentQuestion').textContent = questionNumber;
             document.getElementById('questionTitle').textContent = question.question;
 
+            // 選択肢を生成
             const optionsContainer = document.getElementById('optionsContainer');
             optionsContainer.innerHTML = '';
 
@@ -610,13 +638,18 @@
 
             // フィードバック非表示
             document.getElementById('feedback').classList.remove('show');
-            document.getElementById('submitBtn').textContent = '回答する';
-            document.getElementById('submitBtn').disabled = false;
+
+            // ボタンをリセット
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.textContent = '回答する';
+            submitBtn.disabled = false;
+            submitBtn.onclick = submitAnswer;
         }
 
         // 回答送信
         function submitAnswer() {
             const selectedOption = document.querySelector('input[name="answer"]:checked');
+
             if (!selectedOption) {
                 alert('回答を選択してください');
                 return;
@@ -626,14 +659,6 @@
             const question = questions[currentQuestionIndex];
             const isCorrect = selectedIndex === question.correct;
 
-            // 回答を保存
-            answers.push({
-                questionIndex: currentQuestionIndex,
-                selected: selectedIndex,
-                correct: question.correct,
-                isCorrect: isCorrect
-            });
-
             if (isCorrect) {
                 score++;
             }
@@ -641,18 +666,25 @@
             // フィードバック表示
             showFeedback(isCorrect, question);
 
-            // 次の問題へ
-            document.getElementById('submitBtn').textContent =
-                currentQuestionIndex === 9 ? 'テスト完了' : '次の問題へ';
-            document.getElementById('submitBtn').disabled = false;
-            document.getElementById('submitBtn').onclick = () => {
-                if (currentQuestionIndex === 9) {
-                    submitTest();
-                } else {
-                    currentQuestionIndex++;
-                    loadQuestion();
-                }
-            };
+            // ボタン状態を更新
+            const submitBtn = document.getElementById('submitBtn');
+            if (currentQuestionIndex === 9) {
+                submitBtn.textContent = 'テスト完了';
+            } else {
+                submitBtn.textContent = '次の問題へ';
+            }
+            submitBtn.disabled = false;
+            submitBtn.onclick = nextQuestion;
+        }
+
+        // 次の問題へ進む
+        function nextQuestion() {
+            if (currentQuestionIndex === 9) {
+                submitTest();
+            } else {
+                currentQuestionIndex++;
+                loadQuestion();
+            }
         }
 
         // フィードバック表示
@@ -714,8 +746,7 @@
         function restartTest() {
             currentQuestionIndex = 0;
             score = 0;
-            timeRemaining = 15 * 60;
-            answers = [];
+            timeRemaining = TOTAL_TIME;
             testStarted = false;
 
             document.getElementById('startScreen').style.display = 'block';
