@@ -132,6 +132,38 @@
             text-align: left;
         }
 
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .form-group input::placeholder {
+            color: #999;
+        }
+
         .start-btn {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
@@ -144,9 +176,15 @@
             transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        .start-btn:hover {
+        .start-btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .start-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
         }
 
         .question-section {
@@ -329,6 +367,88 @@
             line-height: 1.6;
         }
 
+        .candidate-name {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 15px 0;
+        }
+
+        .share-section {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        .share-section h3 {
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .share-section p {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .share-url-box {
+            display: flex;
+            gap: 10px;
+            align-items: stretch;
+        }
+
+        .share-url-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #333;
+            background: white;
+            word-break: break-all;
+            resize: none;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+
+        .copy-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .copy-btn:active {
+            transform: translateY(0);
+        }
+
+        .copy-success {
+            color: #4caf50;
+            font-size: 12px;
+            margin-top: 8px;
+            display: none;
+            font-weight: 600;
+        }
+
         .restart-btn {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
@@ -344,6 +464,22 @@
         .restart-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .viewed-from-url-notice {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            color: #2e7d32;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        .viewed-from-url-notice strong {
+            display: block;
+            margin-bottom: 8px;
         }
 
         @media (max-width: 600px) {
@@ -381,6 +517,14 @@
             .question-count {
                 text-align: left;
             }
+
+            .share-url-box {
+                flex-direction: column;
+            }
+
+            .copy-btn {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -401,8 +545,20 @@
                 • 採点：即座に採点され、各問の解説が表示されます<br>
                 • 難易度：実務レベル（ひっかけ問題を含む）
             </div>
-            <p>ボタンをクリックしてテストを開始してください。</p>
-            <button class="start-btn" onclick="startTest()">テスト開始</button>
+
+            <!-- 名前入力フィールド -->
+            <div class="form-group">
+                <label for="candidateName">受験者名 <span style="color: #f44336;">*</span></label>
+                <input
+                    type="text"
+                    id="candidateName"
+                    placeholder="例：田中太郎"
+                    maxlength="50"
+                    onkeyup="updateStartButtonState()"
+                >
+            </div>
+
+            <button class="start-btn" id="startBtn" onclick="startTest()" disabled>テスト開始</button>
         </div>
 
         <!-- テスト画面 -->
@@ -434,13 +590,36 @@
             <div class="header">
                 <h1>テスト完了</h1>
             </div>
+
+            <!-- URLから表示された場合の通知 -->
+            <div class="viewed-from-url-notice" id="viewedFromUrlNotice" style="display: none;">
+                <strong>📋 共有URLから表示されました</strong>
+                このページは結果共有用のリンクから開かれています。
+            </div>
+
+            <div class="candidate-name" id="resultCandidateName"></div>
+
             <div class="score-circle">
                 <div class="score-value" id="finalScore">0</div>
                 <div class="score-label">/ 10</div>
             </div>
+
             <div class="result-message" id="resultMessage"></div>
             <div class="result-detail" id="resultDetail"></div>
-            <button class="restart-btn" onclick="restartTest()">テストをもう一度</button>
+
+            <!-- 報告用URL共有セクション -->
+            <div class="share-section" id="shareSection" style="display: none;">
+                <h3>📋 結果を管理者に報告</h3>
+                <p><strong>以下のURLをコピーして、採用担当者にチャットやメールで送ってください：</strong></p>
+                <p style="color: #999; font-size: 12px; margin-bottom: 12px;">このリンクを開くと、結果がすぐに表示されます</p>
+                <div class="share-url-box">
+                    <textarea class="share-url-input" id="shareUrl" readonly></textarea>
+                    <button class="copy-btn" onclick="copyShareUrl()">📋 コピー</button>
+                </div>
+                <div class="copy-success" id="copySuccess">✓ コピーしました</div>
+            </div>
+
+            <button class="restart-btn" onclick="restartTest()" id="restartBtn">テストをもう一度</button>
         </div>
     </div>
 
@@ -565,10 +744,93 @@
         let timeRemaining = 900; // 15分（900秒）
         let timerInterval = null;
         let testStarted = false;
+        let candidateName = '';
+        let isViewedFromUrl = false;
         const TOTAL_TIME = 900; // 900秒
+
+        // URLパラメータを解析
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                name: params.get('name'),
+                score: params.get('score')
+            };
+        }
+
+        // ページ読み込み時の初期化
+        function initializePage() {
+            const params = getUrlParams();
+
+            // URLにパラメータがある場合、結果画面を直接表示
+            if (params.name && params.score !== null) {
+                isViewedFromUrl = true;
+                candidateName = decodeURIComponent(params.name);
+                score = parseInt(params.score);
+                showResultsFromUrl();
+            }
+        }
+
+        // URLから表示された結果画面を表示
+        function showResultsFromUrl() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('questionSection').classList.remove('active');
+            document.getElementById('resultSection').classList.add('active');
+
+            // URLから表示されたことを通知
+            document.getElementById('viewedFromUrlNotice').style.display = 'block';
+            document.getElementById('shareSection').style.display = 'none';
+            document.getElementById('restartBtn').style.display = 'none';
+
+            // 受験者名とスコアを表示
+            document.getElementById('resultCandidateName').textContent = `受験者：${candidateName}`;
+            document.getElementById('finalScore').textContent = score;
+
+            const percentage = Math.round((score / 10) * 100);
+            let resultMessage = '';
+            let resultDetail = '';
+
+            if (percentage === 100) {
+                resultMessage = '満点です！🎉';
+                resultDetail = 'Webインフラの実務知識が非常に豊富です。素晴らしい成績です。';
+            } else if (percentage >= 80) {
+                resultMessage = '優秀です！';
+                resultDetail = 'Webインフラの実務経験が充分にあります。';
+            } else if (percentage >= 60) {
+                resultMessage = '良好です。';
+                resultDetail = 'Webインフラの基本知識があります。';
+            } else if (percentage >= 40) {
+                resultMessage = '今後の学習が必要です。';
+                resultDetail = 'Webインフラの実務経験を積むことをお勧めします。';
+            } else {
+                resultMessage = '学習を強化してください。';
+                resultDetail = 'DNS、メール認証、WordPressのトラブルシューティング知識の習得をお勧めします。';
+            }
+
+            document.getElementById('resultMessage').textContent = resultMessage;
+            document.getElementById('resultDetail').textContent = resultDetail;
+        }
+
+        // 受験者名入力時にボタンの状態を更新
+        function updateStartButtonState() {
+            const nameInput = document.getElementById('candidateName');
+            const startBtn = document.getElementById('startBtn');
+
+            if (nameInput.value.trim() === '') {
+                startBtn.disabled = true;
+            } else {
+                startBtn.disabled = false;
+            }
+        }
 
         // テスト開始
         function startTest() {
+            candidateName = document.getElementById('candidateName').value.trim();
+
+            if (!candidateName) {
+                alert('受験者名を入力してください');
+                return;
+            }
+
             testStarted = true;
             currentQuestionIndex = 0;
             score = 0;
@@ -715,6 +977,8 @@
             document.getElementById('questionSection').classList.remove('active');
             document.getElementById('resultSection').classList.add('active');
 
+            // 受験者名を表示
+            document.getElementById('resultCandidateName').textContent = `受験者：${candidateName}`;
             document.getElementById('finalScore').textContent = score;
 
             const percentage = Math.round((score / 10) * 100);
@@ -740,6 +1004,44 @@
 
             document.getElementById('resultMessage').textContent = resultMessage;
             document.getElementById('resultDetail').textContent = resultDetail;
+
+            // 報告用URLを生成（URLから表示された場合は非表示）
+            if (!isViewedFromUrl) {
+                generateShareUrl();
+            }
+        }
+
+        // 報告用URL生成
+        function generateShareUrl() {
+            const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '');
+            const shareUrl = `${baseUrl}?name=${encodeURIComponent(candidateName)}&score=${score}`;
+
+            document.getElementById('shareUrl').value = shareUrl;
+            document.getElementById('shareSection').style.display = 'block';
+        }
+
+        // URLをクリップボードにコピー
+        function copyShareUrl() {
+            const shareUrlInput = document.getElementById('shareUrl');
+
+            // テキストエリアの内容を選択
+            shareUrlInput.select();
+
+            try {
+                // クリップボードにコピー
+                document.execCommand('copy');
+
+                // コピー成功表示
+                const copySuccess = document.getElementById('copySuccess');
+                copySuccess.style.display = 'block';
+
+                // 2秒後に非表示
+                setTimeout(() => {
+                    copySuccess.style.display = 'none';
+                }, 2000);
+            } catch (err) {
+                alert('コピーに失敗しました');
+            }
         }
 
         // テスト再スタート
@@ -748,13 +1050,21 @@
             score = 0;
             timeRemaining = TOTAL_TIME;
             testStarted = false;
+            candidateName = '';
+            isViewedFromUrl = false;
 
+            document.getElementById('candidateName').value = '';
+            document.getElementById('startBtn').disabled = true;
             document.getElementById('startScreen').style.display = 'block';
             document.getElementById('questionSection').classList.remove('active');
             document.getElementById('resultSection').classList.remove('active');
+            document.getElementById('viewedFromUrlNotice').style.display = 'none';
 
             clearInterval(timerInterval);
         }
+
+        // ページ読み込み時に初期化
+        window.addEventListener('load', initializePage);
     </script>
 </body>
 </html>
